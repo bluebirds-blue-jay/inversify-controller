@@ -10,14 +10,19 @@ import { before } from './before';
 export function jsonResponse(options: TJSONResponseOptions) {
   options = Lodash.cloneDeep(options);
 
-  const validationRate = Config.get('jsonResponseValidationRate', options.validationRate);
+  const shouldValidate = () => {
+    const validationRate = Config.get('jsonResponseValidationRate', options.validationRate);
 
-  if (validationRate > 1 || validationRate < 0) {
-    throw new Error(`jsonResponseValidationRate is out of range: >= 0 <= 1.`);
-  }
+    if (validationRate > 1 || validationRate < 0) {
+      throw new Error(`jsonResponseValidationRate is out of range: >= 0 <= 1.`);
+    }
 
-  const shouldAlwaysValidate = validationRate === 1;
-  const shouldNeverValidate = validationRate === 0;
+    const shouldAlwaysValidate = validationRate === 1;
+    const shouldNeverValidate = validationRate === 0;
+
+    // Randomize validation if needed.
+    return !shouldNeverValidate && (shouldAlwaysValidate || (Math.random() <= validationRate));
+  };
 
   const jsonSchema = options.jsonSchema;
   const jsonSchemaSafeCopy = Lodash.cloneDeep(jsonSchema);
@@ -46,11 +51,7 @@ export function jsonResponse(options: TJSONResponseOptions) {
         if (options.coerceToJSON) {
           body = JSON.parse(JSON.stringify(body));
         }
-
-        // Randomize validation if needed.
-        const shouldValidate = !shouldNeverValidate && (shouldAlwaysValidate || (Math.random() <= validationRate));
-
-        if (is2xx(res.statusCode as StatusCode) && shouldValidate) {
+        if (is2xx(res.statusCode as StatusCode) && shouldValidate()) {
           if (getValidator()(body)) {
             if (!isStatusCodesArray) {
               res.status(options.statusCode as number);
