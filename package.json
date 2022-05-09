@@ -31,7 +31,7 @@
     "@bluejay/rest-errors": "^4.0.2",
     "@bluejay/schema": "^3.0.0",
     "@bluejay/status-code": "^4.0.2",
-    "@bluejay/url": "^3.0.0",
+    "@bluejay/url": "^3.0.2",
     "@bluejay/utils": "^4.0.0"
   },
   "peerDependencies": {
